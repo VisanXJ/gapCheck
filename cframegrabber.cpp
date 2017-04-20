@@ -7,6 +7,7 @@
 CFrameGrabber::CFrameGrabber()
 {
     isGrabFrame = false;
+    isGrabCalibrateFrame = false;
     frameCount = 0;
     isWriteFrame  =  getConfigValue(6).toInt();
 
@@ -62,6 +63,7 @@ void CFrameGrabber::run()
 //    qDebug()<<"Camera ID is:"<<getConfigValue(1).toInt();
     cap.set(CV_CAP_PROP_FRAME_WIDTH , this->getConfigValue(2).toInt());     //2592
     cap.set(CV_CAP_PROP_FRAME_HEIGHT , this->getConfigValue(3).toInt());    //1944
+//    cap.set(CV_CAP_PROP_EXPOSURE, this->getConfigValue(4).toDouble());
 
     if(!cap.isOpened())
     {
@@ -86,6 +88,18 @@ void CFrameGrabber::run()
         {
             emit updataFrame(frameLogged); //send updata GUI signal
         }
+
+        if(isGrabCalibrateFrame)    //send calibration frame to Main Thread
+        {
+            emit calibrateFrame(frameLogged);
+            isGrabCalibrateFrame = false;
+        }
+
+
+
+
+
+
         if((frameLogged.data) && (isGrabFrame))
         {
 //            char file[400] = {'0'};
@@ -160,4 +174,9 @@ void CFrameGrabber::distData(QList<int>& listData)
 {
     qDebug()<<"grab thread receive data";
     emit sendDistDataToUI(listData);
+}
+
+void CFrameGrabber::grabCalibrateFrame()
+{
+    isGrabCalibrateFrame = true;
 }

@@ -14,8 +14,11 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
 
+
+
     locator_offset = getConfigValue(13);
     lastHeigth = getConfigValue(17);
+    calibrationValue = getConfigValue(19).toDouble();
 
     ui->tableWidget->setColumnCount(3);
    // ui->tableWidget->setFixedWidth(200);
@@ -34,6 +37,10 @@ MainWindow::MainWindow(QWidget *parent) :
 
     connect(frameGrabber, SIGNAL(cameraErr()), this, SLOT(cameraWarningWdiget()));
     connect(frameGrabber, SIGNAL(updataFrame(Mat)), this, SLOT(displayLiveFrame(Mat)));
+
+    connect(this, SIGNAL(grabCalibrationFrame()), frameGrabber, SLOT(grabCalibrateFrame()));
+    connect(frameGrabber, SIGNAL(calibrateFrame(Mat)), this, SLOT(grabCalibrationFrame(Mat)));
+
     connect(frameGrabber, SIGNAL(sendDistDataToUI(QList<int>&)), this, SLOT(displayDistData(QList<int>&)));
     frameGrabber->start();
 
@@ -190,6 +197,13 @@ QString MainWindow::getConfigValue(int propId)
             return lastHeigth;
             break;
         }
+
+        case 19:
+        {
+            QString calibrateValue = configFile->value("ROIInfo/calibrateValue").toString();
+            return calibrateValue;
+            break;
+        }
         default:
             return 0;
             break;
@@ -212,7 +226,7 @@ void MainWindow::on_originalPointBtn_clicked()
 void MainWindow::on_lightBtn_clicked()
 {
     //emit stopGrabFrame();
-    QProcess::startDetached("explorer gapCheck Configuration\\source frames\\Grabbed Frames");
+    QProcess::startDetached("explorer gapCheck Configuration");
 }
 
 void MainWindow::on_launchBtn_clicked()
@@ -248,13 +262,13 @@ void MainWindow::on_launchBtn_clicked()
 void MainWindow::displayDistData(QList<int>& listData)
 {
     qDebug()<<"UI thread receive data now!";
-    qDebug()<< "Dist Data is" << (getConfigValue(17).toInt() - listData[0])/132.0 - locator_offset.toDouble();
+    qDebug()<< "Dist Data is" << (getConfigValue(17).toInt() - listData[0])/calibrationValue - locator_offset.toDouble();
 
     int displayCount = 0;
     bool ngOrOK = true;
     for(int rows = 0; rows < 10; rows++)
     {
-        double distData = (getConfigValue(17).toInt() -listData[displayCount])/132.0 - locator_offset.toDouble();
+        double distData = (getConfigValue(17).toInt() -listData[displayCount])/calibrationValue - locator_offset.toDouble();
         for(int cols = 0; cols < 3; cols++)
         {
             ui->tableWidget->setItem(rows, cols, new QTableWidgetItem(QString::number(distData)));
@@ -296,4 +310,29 @@ void MainWindow::keyPressEvent(QKeyEvent *e)
         qDebug() << "Detect keyboard is pressed!";
      }
 
+}
+
+void MainWindow::on_lightBtn_2_clicked()
+{
+
+}
+
+void MainWindow::on_actionOpen_triggered()
+{
+    on_lightBtn_clicked();
+}
+
+
+
+
+
+
+void MainWindow::on_actionCalibrate_triggered()
+{
+    emit grabCalibrationFrame();
+}
+
+void MainWindow::grabCalibrationFrame(Mat frame4Calibrate)
+{
+    imwrite("gapCheck Configuration\\source frames\\frame4Calibrate.jpg", frame4Calibrate);
 }

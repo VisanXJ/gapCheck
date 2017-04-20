@@ -22,6 +22,7 @@ public:
     QImage Mat2QImage(Mat& image);
 
     bool isGrabFrame;
+    bool isGrabCalibrateFrame;
 
     int frameCount;
 
@@ -38,6 +39,8 @@ signals:
     void cameraErr();
     void updataFrame(Mat liveFrame);
 
+    void calibrateFrame(Mat calibrateFrame);
+
     bool sendDataToProcessThread(Mat liveFrame);
 
     void setROI();
@@ -45,6 +48,7 @@ signals:
 
 public slots:
     void grabFrame();
+    void grabCalibrateFrame();
     void stopGrabFrameSlot();
     void distData(QList<int> &listData);
 

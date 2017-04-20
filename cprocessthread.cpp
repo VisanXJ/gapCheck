@@ -52,7 +52,7 @@ bool CProcessThread::receiveDataOrNot(Mat liveFrame)
         points = getPoints(frameBinarized, 255);
 
         cv::fitLine(points, line, CV_DIST_HUBER , 0, 0.01, 0.01);
-         double cos_theta = line[0];
+        double cos_theta = line[0];
         double sin_theta = line[1];
         double x0 = line[2], y0 = line[3];
         double phi = atan2(sin_theta, cos_theta) + PI / 2.0;        //rotate angle:theta
@@ -87,7 +87,7 @@ bool CProcessThread::receiveDataOrNot(Mat liveFrame)
 
         /*Get X index point start*/
         int xIndex = 0;
-        uchar* data = frameRotated.ptr<uchar>(170);       //Serach X index at 40th row of image
+        uchar* data = frameRotated.ptr<uchar>(roi_heigth.toInt() - 20);       //Serach X index at 20th row of image, at specify row of image
         for (int i = 30; i < frameRotated.cols; i++)        //The original value is 0
         { if(data[i] == 255)
             {
@@ -350,6 +350,12 @@ QString CProcessThread::getConfigValue(int propId)
             return lastHeigth;
             break;
         }
+        case 19:
+        {
+            QString calibrateValue = configFile->value("ROIInfo/calibrateValue").toString();
+            return calibrateValue;
+            break;
+        }
         default:
             return 0;
             break;
@@ -462,7 +468,7 @@ void CProcessThread::findFirstPeaks(QList<int>& listData)
     QList<int>::iterator dataIndex;
     for(dataIndex = pixelDistant.begin(); dataIndex != pixelDistant.end(); dataIndex++)
     {
-        txtOutput<<(distantArea-(*dataIndex))/132.0 - locator_offset.toDouble()<<"\n";
+        txtOutput<<(distantArea-(*dataIndex))/getConfigValue(19).toDouble() - locator_offset.toDouble()<<"\n";
     }
     qDebug()<<"all done";
 
