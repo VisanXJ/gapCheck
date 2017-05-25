@@ -180,3 +180,9 @@ void CFrameGrabber::grabCalibrateFrame()
 {
     isGrabCalibrateFrame = true;
 }
+
+
+CFrameGrabber::~CFrameGrabber()
+{
+    delete prcThd;
+}

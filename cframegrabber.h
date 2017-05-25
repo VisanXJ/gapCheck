@@ -17,6 +17,7 @@ class CFrameGrabber : public QThread
     Q_OBJECT
 public:
     CFrameGrabber();
+    ~CFrameGrabber();
     QString getConfigValue(int propId);
 
     QImage Mat2QImage(Mat& image);

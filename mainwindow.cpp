@@ -69,6 +69,8 @@ MainWindow::MainWindow(QWidget *parent) :
 
 MainWindow::~MainWindow()
 {
+    delete frameGrabber;
+    delete serialPort;
     delete ui;
 }
 
@@ -266,14 +268,17 @@ void MainWindow::displayDistData(QList<int>& listData)
 
     int displayCount = 0;
     bool ngOrOK = true;
+    double distData;
     for(int rows = 0; rows < 10; rows++)
     {
-        double distData = (getConfigValue(17).toInt() -listData[displayCount])/calibrationValue - locator_offset.toDouble();
+
         for(int cols = 0; cols < 3; cols++)
         {
+            distData = (getConfigValue(17).toInt() -listData[displayCount])/calibrationValue - locator_offset.toDouble();
             ui->tableWidget->setItem(rows, cols, new QTableWidgetItem(QString::number(distData)));
             if((distData >0.5)||(distData < 0.3))
             {
+
                 ui->tableWidget->item(rows,cols)->setBackgroundColor(QColor("red"));
                 ngOrOK = false;
 

@@ -92,9 +92,12 @@ bool CProcessThread::receiveDataOrNot(Mat liveFrame)
         { if(data[i] == 255)
             {
                 xIndex = i;
+
                 break;
             }
         }
+
+        xIndex += 5;
         qDebug()<<"xIndex is"<<xIndex;
 //        qDebug()<<"ok";
         /*Get X index ends*/
@@ -464,6 +467,9 @@ void CProcessThread::findFirstPeaks(QList<int>& listData)
     {
         qDebug() << "Open failed." << endl;
     }
+
+
+
     QTextStream txtOutput(&f);
     QList<int>::iterator dataIndex;
     for(dataIndex = pixelDistant.begin(); dataIndex != pixelDistant.end(); dataIndex++)
