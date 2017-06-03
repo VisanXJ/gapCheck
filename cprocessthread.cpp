@@ -189,7 +189,7 @@ bool CProcessThread::receiveDataOrNot(Mat liveFrame)
                 flag = 1;
                 break;
             }
-            if(j == 1)
+            if(j == 1)      /*倒数第40行，从下往上扫描，遇到255马上跳出循环*/
             {
                 distantPixel.push_back(j);
                 flag = 1;
@@ -202,7 +202,11 @@ bool CProcessThread::receiveDataOrNot(Mat liveFrame)
         }
     }
 
+//    for(int j = 0; j < lastROI.rows; j++)   /*改变策略，从上往下搜索，尽量排除掉毛刺的影响*/
+//    {
+//        int flag = 0;
 
+//    }
 
 
     if(ROICount > 959)
@@ -357,6 +361,18 @@ QString CProcessThread::getConfigValue(int propId)
         {
             QString calibrateValue = configFile->value("ROIInfo/calibrateValue").toString();
             return calibrateValue;
+            break;
+        }
+        case 20:
+        {
+            QString max_distant = configFile->value("ROIInfo/max_distant").toString();
+            return max_distant;
+            break;
+        }
+        case 21:
+        {
+            QString min_distant = configFile->value("ROIInfo/min_distant").toString();
+            return min_distant;
             break;
         }
         default:

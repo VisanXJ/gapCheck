@@ -206,6 +206,19 @@ QString MainWindow::getConfigValue(int propId)
             return calibrateValue;
             break;
         }
+        case 20:
+        {
+            QString max_distant = configFile->value("ROIInfo/max_distant").toString();
+            return max_distant;
+            break;
+        }
+        case 21:
+        {
+            QString min_distant = configFile->value("ROIInfo/min_distant").toString();
+            return min_distant;
+            break;
+        }
+
         default:
             return 0;
             break;
@@ -235,6 +248,7 @@ void MainWindow::on_launchBtn_clicked()
 {
     ui->launchBtn->setEnabled(false);
     luanchBtnStage = false;
+    ui->ng_items->setText("Loading");
 
     emit grabFrameNow();
 
@@ -266,6 +280,8 @@ void MainWindow::displayDistData(QList<int>& listData)
     qDebug()<<"UI thread receive data now!";
     qDebug()<< "Dist Data is" << (getConfigValue(17).toInt() - listData[0])/calibrationValue - locator_offset.toDouble();
 
+    int ng_itme = 0;
+
     int displayCount = 0;
     bool ngOrOK = true;
     double distData;
@@ -276,8 +292,14 @@ void MainWindow::displayDistData(QList<int>& listData)
         {
             distData = (getConfigValue(17).toInt() -listData[displayCount])/calibrationValue - locator_offset.toDouble();
             ui->tableWidget->setItem(rows, cols, new QTableWidgetItem(QString::number(distData)));
-            if((distData >0.5)||(distData < 0.3))
+            if((distData > max_distant)||(distData < min_distant))
             {
+                if(distData >max_distant)
+                    ng_itme = 1;        // '1' means more than 0.5mm
+                else if(distData < min_distant)
+                    ng_itme = 2;        //'2' means less than 0.3mm
+                else
+                    ng_itme = 0;
 
                 ui->tableWidget->item(rows,cols)->setBackgroundColor(QColor("red"));
                 ngOrOK = false;
@@ -292,12 +314,24 @@ void MainWindow::displayDistData(QList<int>& listData)
 
         pe.setColor(QPalette::WindowText, Qt::red);
         ui->label->setPalette(pe);
+
+        if(ng_itme == 1)    //more than 0.5mm
+        {
+            ui->ng_items->setText("0.5 NG");
+        }
+
+        else if(ng_itme ==2)
+        {
+            ui->ng_items->setText("0.3 NG");
+        }
     }
     else
     {
         ui->label->setText("OK");
         pe.setColor(QPalette::WindowText, Qt::green);
         ui->label->setPalette(pe);
+
+        ui->ng_items->setText("OK");
     }
 
     ui->launchBtn->setEnabled(true);

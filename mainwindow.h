@@ -31,6 +31,9 @@ public:
     QString lastHeigth;
     QString locator_offset;
 
+    double max_distant = getConfigValue(20).toDouble();
+    double min_distant = getConfigValue(21).toDouble();
+
     QPalette pe;
 
     void keyPressEvent(QKeyEvent *);    //Key board callback function
