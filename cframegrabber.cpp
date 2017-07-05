@@ -16,6 +16,8 @@ CFrameGrabber::CFrameGrabber()
     connect(this, SIGNAL(sendDataToProcessThread(Mat)), prcThd, SLOT(receiveDataOrNot(Mat)));
     connect(this, SIGNAL(setROI()), prcThd, SLOT(setROISlot()));
     connect(prcThd, SIGNAL(sendDistDataToGrabThread(QList<int>&)), this, SLOT(distData(QList<int>&)));
+    connect(this, SIGNAL(signal_waveCheck2PorcThread()), prcThd, SLOT(slot_waveCheck()));
+
     prcThd->start();
 }
 
@@ -194,4 +196,10 @@ CFrameGrabber::~CFrameGrabber()
     delete prcThd;
 
     qDebug() << "Frame Grabber thread is destructor ";
+}
+
+
+void CFrameGrabber::slot_waveCheck2ProcThread()
+{
+    emit signal_waveCheck2PorcThread();
 }

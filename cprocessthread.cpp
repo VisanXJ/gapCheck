@@ -73,8 +73,9 @@ bool CProcessThread::receiveDataOrNot(Mat liveFrame)
         Point center = Point( frameBinarized.cols/2, frameBinarized.rows/2 );
         double angle = phi / PI * 180;
 
+        angle = 11;
 
-        qDebug()<<tr("Rotate angle is:") << phi / PI * 180;;
+        qDebug()<<tr("Rotate angle is:") << angle;
 
         double scale = 1.0;
 
@@ -161,7 +162,7 @@ bool CProcessThread::receiveDataOrNot(Mat liveFrame)
     }
 
 
-    lastROI = frameRotated(Rect(xIndexForUse, yIndexForUse-distantArea, 10, distantArea));
+    lastROI = frameRotated(Rect(xIndexForUse, yIndexForUse-distantArea, 3s0, distantArea));
 
     ROIList<<lastROI;
     if (isShowDebugFrame.toInt())
@@ -182,7 +183,7 @@ bool CProcessThread::receiveDataOrNot(Mat liveFrame)
 
 
 
-    for (int j = lastROI.rows-40; j > 0; j--)
+    for (int j = lastROI.rows-10; j > 0; j--)
     {
         int flag = 0;
         uchar* data = lastROI.ptr<uchar>(j);
@@ -397,6 +398,7 @@ void CProcessThread::setROISlot()
 
 void CProcessThread::findFirstPeaks(QList<int>& listData)
 {
+    int jumpValue = 20;     //
     std::vector<int> sign;
     //QList<int> sign;
     for(int i = 3; i < listData.length(); i++)      //第3项减去第1项
@@ -407,10 +409,10 @@ void CProcessThread::findFirstPeaks(QList<int>& listData)
 
 
 
-    //挑选出 sign >= 10 的index 然后截取一小段；再以index+15为起点，寻找 sign >= 10 的index;
+    //挑选出 sign >= jumpValue 的index 然后截取一小段；再以index+15为起点，寻找 sign >= jumpValue 的index;
 
     QList<int> baseIndexContainer;
-    //std::vector<int>::iterator baseIndex = sign.begin();      //存储 sign >= 10 的下标
+    //std::vector<int>::iterator baseIndex = sign.begin();      //存储 sign >= jumpValue 的下标
     int baseIndex = 0;
     std::vector<int>::iterator resultValueIndex;
 
@@ -418,7 +420,7 @@ void CProcessThread::findFirstPeaks(QList<int>& listData)
     QList<int> indMax;
     for(int j = 0; j < sign.size(); j++)
     {
-        if(sign[j] >= 10)
+        if(sign[j] >= jumpValue)
         {
             baseIndex = baseIndex + j;
             baseIndexContainer.push_back(baseIndex);
@@ -439,12 +441,12 @@ void CProcessThread::findFirstPeaks(QList<int>& listData)
 
 
 
-        baseIndex = baseIndex + 15;
+        baseIndex = baseIndex + 12;
         int forwardCount = 0;
         for(auto newIndex = (signIterator + baseIndex); newIndex != sign.end() ; newIndex++)
         {
             forwardCount++;
-            if(*newIndex >= 10)
+            if(*newIndex >= jumpValue)
             {
                 baseIndex = baseIndex + forwardCount;
                 baseIndexContainer.push_back(baseIndex);
@@ -477,6 +479,7 @@ void CProcessThread::findFirstPeaks(QList<int>& listData)
             //qDebug()<<"pixelDistant = "<<listData[jj];
         }
         pixelDistant.push_back(distantMax);
+        qDebug() << distantMax;
     }
     /*start calculate distant                                 end*/
 
@@ -496,11 +499,33 @@ void CProcessThread::findFirstPeaks(QList<int>& listData)
     for(dataIndex = pixelDistant.begin(); dataIndex != pixelDistant.end(); dataIndex++)
     {
         txtOutput<<(distantArea-(*dataIndex))/getConfigValue(19).toDouble() - locator_offset.toDouble()<<"\n";
+//        qDebug() << (distantArea-(*dataIndex))/getConfigValue(19).toDouble() - locator_offset.toDouble()<<"\n";
     }
+
     qDebug()<<"all done";
 
     emit sendDistDataToGrabThread(pixelDistant);
 
     qDebug() << "Length is" << indMax.length() << tr("极大值为");
 
+}
+
+void CProcessThread::slot_waveCheck()
+{
+    QFile dataFile("D:\\calculatedData.txt");
+    if(!dataFile.open(QIODevice::ReadOnly | QIODevice::Text))
+    {
+        qDebug() << "Open failed." << endl;
+    }
+
+    QList<int> listData;
+    while(!dataFile.atEnd())
+    {
+        QByteArray lineData = dataFile.readLine();
+        QString str(lineData);
+        int pixelData = str.toInt();
+        listData.push_back(pixelData);
+    }
+
+    this->findFirstPeaks(listData);
 }

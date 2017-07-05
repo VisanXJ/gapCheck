@@ -42,6 +42,8 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(frameGrabber, SIGNAL(calibrateFrame(Mat)), this, SLOT(grabCalibrationFrame(Mat)));
 
     connect(frameGrabber, SIGNAL(sendDistDataToUI(QList<int>&)), this, SLOT(displayDistData(QList<int>&)));
+
+    connect(this, SIGNAL(signal_waveCheck()), frameGrabber, SLOT(slot_waveCheck2ProcThread()));
     frameGrabber->start();
 
     /*open the serial port connected to PC*/
@@ -567,3 +569,8 @@ double MainWindow::calculateCalibValue(Mat frameEdged)
 
 }
 
+
+void MainWindow::on_pushButton_clicked()
+{
+    emit signal_waveCheck();
+}

@@ -64,6 +64,8 @@ public slots:
     bool receiveDataOrNot(Mat liveFrame);
     void setROISlot();
 
+    void slot_waveCheck();
+
 signals:
     void sendDistDataToGrabThread(QList<int>& listData);
     void sendErrMsg();

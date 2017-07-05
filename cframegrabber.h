@@ -49,11 +49,15 @@ signals:
     void setROI();
     void sendDistDataToUI(QList<int>& listData);
 
+    void signal_waveCheck2PorcThread();
+
 public slots:
     void grabFrame();
     void grabCalibrateFrame();
     void stopGrabFrameSlot();
     void distData(QList<int> &listData);
+
+    void slot_waveCheck2ProcThread();
 
 
 };
