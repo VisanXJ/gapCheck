@@ -58,14 +58,16 @@ QString CFrameGrabber::getConfigValue(int propId)
 
 void CFrameGrabber::run()
 {
-    VideoCapture cap(getConfigValue(1).toInt());
+//    VideoCapture cap(getConfigValue(1).toInt());
+
+    cap = new VideoCapture(getConfigValue(1).toInt());
 
 //    qDebug()<<"Camera ID is:"<<getConfigValue(1).toInt();
-    cap.set(CV_CAP_PROP_FRAME_WIDTH , this->getConfigValue(2).toInt());     //2592
-    cap.set(CV_CAP_PROP_FRAME_HEIGHT , this->getConfigValue(3).toInt());    //1944
+    cap->set(CV_CAP_PROP_FRAME_WIDTH , this->getConfigValue(2).toInt());     //2592
+    cap->set(CV_CAP_PROP_FRAME_HEIGHT , this->getConfigValue(3).toInt());    //1944
 //    cap.set(CV_CAP_PROP_EXPOSURE, this->getConfigValue(4).toDouble());
 
-    if(!cap.isOpened())
+    if(!cap->isOpened())
     {
         //qDebug()<<"camera opening err!";
         emit cameraErr();
@@ -82,7 +84,8 @@ void CFrameGrabber::run()
     while(1)
     {
         Mat frameLogged;
-        cap>>frameLogged;
+//        cap>>frameLogged;
+        cap->read(frameLogged);
 
         if((frameLogged.data) && (showInterval%5 == 0))
         {
@@ -184,5 +187,11 @@ void CFrameGrabber::grabCalibrateFrame()
 
 CFrameGrabber::~CFrameGrabber()
 {
+    cap->release();
+    delete cap;
+    prcThd->terminate();
+    prcThd->wait();
     delete prcThd;
+
+    qDebug() << "Frame Grabber thread is destructor ";
 }

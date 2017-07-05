@@ -13,6 +13,7 @@ class CProcessThread : public QThread
     Q_OBJECT
 public:
     CProcessThread();
+    ~CProcessThread();
     QString getConfigValue(int propId);
 
     const double PI = 3.1415926;

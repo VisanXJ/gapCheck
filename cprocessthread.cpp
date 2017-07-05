@@ -22,6 +22,10 @@ CProcessThread::CProcessThread()
     ROICount = 0;
 }
 
+CProcessThread::~CProcessThread()
+{
+    qDebug() << "Process thread is destructor";
+}
 
 bool CProcessThread::receiveDataOrNot(Mat liveFrame)
 {
@@ -68,6 +72,7 @@ bool CProcessThread::receiveDataOrNot(Mat liveFrame)
         /*Rotate starts*/
         Point center = Point( frameBinarized.cols/2, frameBinarized.rows/2 );
         double angle = phi / PI * 180;
+
 
         qDebug()<<tr("Rotate angle is:") << phi / PI * 180;;
 

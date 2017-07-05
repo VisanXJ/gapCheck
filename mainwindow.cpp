@@ -13,7 +13,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
-
+    ui->pushButton->setVisible(0);
 
 
     locator_offset = getConfigValue(13);
@@ -69,6 +69,9 @@ MainWindow::MainWindow(QWidget *parent) :
 
 MainWindow::~MainWindow()
 {
+    frameGrabber->terminate();
+    frameGrabber->wait();
+
     delete frameGrabber;
     delete serialPort;
     delete ui;
@@ -373,5 +376,194 @@ void MainWindow::on_actionCalibrate_triggered()
 
 void MainWindow::grabCalibrationFrame(Mat frame4Calibrate)
 {
-    imwrite("gapCheck Configuration\\source frames\\frame4Calibrate.jpg", frame4Calibrate);
+    imwrite("gapCheck Configuration\\source frames\\frame4Calibrate.bmp", frame4Calibrate);
+    on_pushButton_clicked(frame4Calibrate);
 }
+
+void MainWindow::on_pushButton_clicked(Mat calibFrame)
+{
+//    Mat calibFrame = imread("gapCheck Configuration\\source frames\\3.jpg", 1);
+//    imshow("Original Frame", calibFrame);
+    Mat imageEdged;
+    Canny(calibFrame, imageEdged, 20, 40);
+    imwrite("gapCheck Configuration\\source frames\\imageEdged.bmp", imageEdged);
+//    imshow("", imageEdged);
+
+////    HoughLines(imageEdged, );
+//    vector<Vec4i> lines;
+//    HoughLinesP(imageEdged, lines, 1, CV_PI/180, 80, 200, 10);
+//    drawDetectLines(calibFrame,lines,Scalar(0, 255, 0));
+
+//    imwrite("gapCheck Configuration\\source frames\\imageLined.jpg", calibFrame);
+//    imshow("Line Detect", calibFrame);
+    double calibValue =  calculateCalibValue(imageEdged);
+//    ui->label_2->setText(tr("标定值："));
+    ui->ng_items->setText(QString::number(1/calibValue));
+
+
+}
+
+void MainWindow::drawDetectLines(Mat& image,const vector<Vec4i>& lines,Scalar & color)
+{
+     // 将检测到的直线在图上画出来
+     vector<Vec4i>::const_iterator it=lines.begin();
+     while(it!=lines.end())
+     {
+         Point pt1((*it)[0],(*it)[1]);
+         Point pt2((*it)[2],(*it)[3]);
+         line(image,pt1,pt2,color,1); //  线条宽度设置为2
+         ++it;
+     }
+ }
+double MainWindow::calculateCalibValue(Mat frameEdged)
+{
+    //The specified col of those index is 150, 250, 350
+
+
+    //Looking for upper X index for calibration
+    QList<int> rowIndex4Calib_upper;
+    int colIndex_upper = 150;
+    for(int numIndex = 0; numIndex <3; numIndex++)
+    {
+        for (int j = 0; j < frameEdged.rows; j++)
+        {
+            uchar* data = frameEdged.ptr<uchar>(j);
+            {
+                if(data[colIndex_upper] == 255)
+                {
+                    rowIndex4Calib_upper.push_back(j);
+                    colIndex_upper = colIndex_upper + 100;
+                    break;
+                }
+            }
+        }
+    }
+
+    //Looking for lower X index for calibration
+    QList<int> rowIndex4Calib_lower;
+    int colIndex_lower = 150;
+    for(int numIndex = 0; numIndex <3; numIndex++)
+    {
+        for (int j = frameEdged.rows - 1; j > 0; j--)
+        {
+            uchar* data = frameEdged.ptr<uchar>(j);
+            {
+                if(data[colIndex_lower] == 255)
+                {
+                    rowIndex4Calib_lower.push_back(j);
+                    colIndex_lower = colIndex_lower + 100;
+                    break;
+                }
+            }
+        }
+    }
+
+
+    QList<double> theta;
+
+    double theta_upper;
+    //theta 1
+    if(rowIndex4Calib_upper[0] == rowIndex4Calib_upper[1])
+    {
+        theta_upper = 0;
+        theta.push_back(theta_upper);
+    }
+    else
+    {
+        theta_upper = atan((rowIndex4Calib_upper[1] - rowIndex4Calib_upper[0])/100.0) *180.0/CV_PI;
+        theta.push_back(theta_upper);
+    }
+    //theta 2
+    if(rowIndex4Calib_upper[0] == rowIndex4Calib_upper[2])
+    {
+        theta_upper = 0;
+        theta.push_back(theta_upper);
+    }
+    else
+    {
+        theta_upper = atan((rowIndex4Calib_upper[2] - rowIndex4Calib_upper[0])/200.0) *180.0/CV_PI;
+        theta.push_back(theta_upper);
+    }
+
+    //theta 3
+    if(rowIndex4Calib_upper[1] == rowIndex4Calib_upper[2])
+    {
+        theta_upper = 0;
+        theta.push_back(theta_upper);
+    }
+    else
+    {
+        theta_upper = atan((rowIndex4Calib_upper[2] - rowIndex4Calib_upper[1])/100.0) *180.0/CV_PI;
+        theta.push_back(theta_upper);
+    }
+
+
+    //theta 4
+    if(rowIndex4Calib_lower[0] == rowIndex4Calib_lower[1])
+    {
+        theta_upper = 0;
+        theta.push_back(theta_upper);
+    }
+    else
+    {
+        theta_upper = atan((rowIndex4Calib_lower[1] - rowIndex4Calib_lower[0])/100.0) *180.0/CV_PI;
+        theta.push_back(theta_upper);
+    }
+    //theta 6
+    if(rowIndex4Calib_lower[0] == rowIndex4Calib_lower[2])
+    {
+        theta_upper = 0;
+        theta.push_back(theta_upper);
+    }
+    else
+    {
+        qDebug() << rowIndex4Calib_lower[1];
+
+        theta_upper = atan((rowIndex4Calib_lower[2] - rowIndex4Calib_lower[0])/200.0) *180.0/CV_PI;
+        theta.push_back(theta_upper);
+    }
+
+    //theta 6
+    if(rowIndex4Calib_lower[1] == rowIndex4Calib_lower[2])
+    {
+        theta_upper = 0;
+        theta.push_back(theta_upper);
+    }
+    else
+    {
+
+
+        theta_upper = atan((rowIndex4Calib_lower[2] - rowIndex4Calib_lower[1])/100.0) *180.0/CV_PI;
+        theta.push_back(theta_upper);
+    }
+
+    double theta_sum = 0;
+    for(auto i = theta.begin(); i != theta.end(); i++)
+    {
+        theta_sum += *i;
+    }
+
+    double theta_Ave = theta_sum/(theta.length());
+
+
+    QList<int> vertical_LIST;
+    for(int i = 0; i < 3; i++)
+    {
+        int vertical_Dist = rowIndex4Calib_lower[i] - rowIndex4Calib_upper[i];
+        vertical_LIST.push_back(vertical_Dist);
+    }
+
+    double dist_sum = 0;
+    for(auto i = vertical_LIST.begin(); i != vertical_LIST.end(); i++)
+    {
+        dist_sum += *i;
+    }
+
+    double dist_Ave = dist_sum/(vertical_LIST.length());
+
+    double calibValue = dist_Ave * cos(theta_Ave/180*CV_PI);
+    qDebug() << "The Calibration Value is " << calibValue;
+    return calibValue;
+
+}
+

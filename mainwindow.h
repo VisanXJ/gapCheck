@@ -10,6 +10,7 @@
 #include "QMessageBox"
 #include <QSerialPort>
 #include <QKeyEvent>
+#include <math.h>
 
 namespace Ui {
 class MainWindow;
@@ -40,6 +41,8 @@ public:
     bool luanchBtnStage;
 
     double calibrationValue;
+    void drawDetectLines(Mat& image,const vector<Vec4i>& lines,Scalar & color);
+    double calculateCalibValue(Mat frameEdged);
 
     ~MainWindow();
 
@@ -62,6 +65,10 @@ private slots:
 
 
     void on_actionCalibrate_triggered();
+
+    void on_pushButton_clicked(Mat calibFrame);
+
+
 
 private:
     Ui::MainWindow *ui;

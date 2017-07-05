@@ -20,6 +20,8 @@ public:
     ~CFrameGrabber();
     QString getConfigValue(int propId);
 
+    VideoCapture *cap;
+
     QImage Mat2QImage(Mat& image);
 
     bool isGrabFrame;
