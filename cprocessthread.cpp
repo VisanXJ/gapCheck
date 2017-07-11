@@ -93,7 +93,7 @@ bool CProcessThread::receiveDataOrNot(Mat liveFrame)
 
         /*Get X index point start*/
         int xIndex = 0;
-        uchar* data = frameRotated.ptr<uchar>(roi_heigth.toInt() - 20);       //Serach X index at 20th row of image, at specify row of image
+        uchar* data = frameRotated.ptr<uchar>(roi_heigth.toInt() - 5);       //Serach X index at 20th row of image, at specify row of image
         for (int i = 30; i < frameRotated.cols; i++)        //The original value is 0
         { if(data[i] == 255)
             {
@@ -162,7 +162,7 @@ bool CProcessThread::receiveDataOrNot(Mat liveFrame)
     }
 
 
-    lastROI = frameRotated(Rect(xIndexForUse, yIndexForUse-distantArea, 3s0, distantArea));
+    lastROI = frameRotated(Rect(xIndexForUse, yIndexForUse-distantArea, 30, distantArea));
 
     ROIList<<lastROI;
     if (isShowDebugFrame.toInt())

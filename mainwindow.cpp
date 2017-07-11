@@ -224,6 +224,41 @@ QString MainWindow::getConfigValue(int propId)
             break;
         }
 
+        case 22:
+        {
+            QString calibrater_Lentgh = configFile->value("ROIInfo/calibrater_Lentgh").toString();
+            return calibrater_Lentgh;
+            break;
+        }
+
+        case 23:
+        {
+            QString baseCol4calib_upper = configFile->value("ROIInfo/baseCol4calib_upper").toString();
+            return baseCol4calib_upper;
+            break;
+        }
+
+        case 24:
+        {
+            QString baseCol4calib_lower = configFile->value("ROIInfo/baseCol4calib_lower").toString();
+            return baseCol4calib_lower;
+            break;
+        }
+
+        case 25:
+        {
+            QString calibThreshold = configFile->value("ROIInfo/calibThreshold").toString();
+            return calibThreshold;
+            break;
+        }
+
+        case 26:
+        {
+            QString indexRow_start4calib = configFile->value("ROIInfo/indexRow_start4calib").toString();
+            return indexRow_start4calib;
+            break;
+        }
+
         default:
             return 0;
             break;
@@ -384,23 +419,50 @@ void MainWindow::grabCalibrationFrame(Mat frame4Calibrate)
 
 void MainWindow::on_pushButton_clicked(Mat calibFrame)
 {
-//    Mat calibFrame = imread("gapCheck Configuration\\source frames\\3.jpg", 1);
+
+    cvtColor(calibFrame, calibFrame, CV_BGR2GRAY);
+//    Mat calibFrame = imread("gapCheck Configuration\\source frames\\frame4Calibrate.bmp", 0);
 //    imshow("Original Frame", calibFrame);
-    Mat imageEdged;
-    Canny(calibFrame, imageEdged, 20, 40);
-    imwrite("gapCheck Configuration\\source frames\\imageEdged.bmp", imageEdged);
+//    Mat imageEdged;
+//    Canny(calibFrame, imageEdged, 20, 40);
+//    imwrite("gapCheck Configuration\\source frames\\imageEdged.bmp", imageEdged);
 //    imshow("", imageEdged);
 
-////    HoughLines(imageEdged, );
+
+    /*Find contours in binary image*/
+//    Mat dst = Mat::zeros(imageEdged.rows, imageEdged.cols, CV_8UC3);
+//    vector<vector<Point> > contours;
+//    vector<Vec4i> hierarchy;
+//    findContours( imageEdged, contours, hierarchy,CV_RETR_CCOMP, CV_CHAIN_APPROX_SIMPLE );
+//    // draw each connected component with its own random color
+//    int idx = 0;
+//    for( ; idx >= 0; idx = hierarchy[idx][0] )
+//    {
+//    Scalar color( rand()&255, rand()&255, rand()&255 );
+//    drawContours( dst, contours, idx, color, CV_FILLED, 8, hierarchy );
+//    }
+
+//    imshow( "Components", dst);
+
+
+    // 使用阈值化来判断标定值
+    Mat frameThreshed;
+    threshold(calibFrame, frameThreshed, getConfigValue(25).toInt(), 255, THRESH_BINARY);
+//    imshow("Frame Thresh", frameThreshed);
+
+
+
+//    HoughLines(imageEdged, );
 //    vector<Vec4i> lines;
 //    HoughLinesP(imageEdged, lines, 1, CV_PI/180, 80, 200, 10);
 //    drawDetectLines(calibFrame,lines,Scalar(0, 255, 0));
 
 //    imwrite("gapCheck Configuration\\source frames\\imageLined.jpg", calibFrame);
 //    imshow("Line Detect", calibFrame);
-    double calibValue =  calculateCalibValue(imageEdged);
-//    ui->label_2->setText(tr("标定值："));
-    ui->ng_items->setText(QString::number(1/calibValue));
+//    double calibValue =  calculateCalibValue(imageEdged);
+    double calibValue =  calculateCalibValue(frameThreshed);
+    ui->label_2->setText(tr("标定值："));
+    ui->ng_items->setText(QString::number((getConfigValue(22).toDouble()/calibValue)));
 
 
 }
@@ -419,22 +481,38 @@ void MainWindow::drawDetectLines(Mat& image,const vector<Vec4i>& lines,Scalar & 
  }
 double MainWindow::calculateCalibValue(Mat frameEdged)
 {
-    //The specified col of those index is 150, 250, 350
 
+    imwrite("gapCheck Configuration\\source frames\\frameInCal.bmp", frameEdged);
+    //The specified col of those index is 150, 250, 350
+    //260 320 380 index in threshold method
 
     //Looking for upper X index for calibration
     QList<int> rowIndex4Calib_upper;
-    int colIndex_upper = 150;
+//    int colIndex_upper = 150;
+//    int colIndex_upper = 260;
+    int colIndex_upper;
+    int baseCol4calib_upper = getConfigValue(23).toInt();
+
+    colIndex_upper = baseCol4calib_upper;
+
+//    qDebug() << frameEdged.at(Point2d(260, 158));
+
     for(int numIndex = 0; numIndex <3; numIndex++)
     {
-        for (int j = 0; j < frameEdged.rows; j++)
+        for (int j = 80; j < frameEdged.rows; j++)
         {
             uchar* data = frameEdged.ptr<uchar>(j);
             {
-                if(data[colIndex_upper] == 255)
+
+//                qDebug() << "The Value at Pos" << j << "is:" << data[colIndex_upper] ;
+
+                if(data[colIndex_upper] )
                 {
+
                     rowIndex4Calib_upper.push_back(j);
-                    colIndex_upper = colIndex_upper + 100;
+//                    colIndex_upper = colIndex_upper + 100;
+                    qDebug() << "The upper Row index is:" << j;
+                    colIndex_upper = colIndex_upper + 60;
                     break;
                 }
             }
@@ -443,17 +521,24 @@ double MainWindow::calculateCalibValue(Mat frameEdged)
 
     //Looking for lower X index for calibration
     QList<int> rowIndex4Calib_lower;
-    int colIndex_lower = 150;
+//    int colIndex_lower = 150;
+//    int colIndex_lower = 260;
+    int colIndex_lower;
+    int baseCol4calib_lower = getConfigValue(24).toInt();
+    colIndex_lower = baseCol4calib_lower;
+
     for(int numIndex = 0; numIndex <3; numIndex++)
     {
-        for (int j = frameEdged.rows - 1; j > 0; j--)
+        for (int j = frameEdged.rows + getConfigValue(26).toInt(); j > 0; j--)
         {
             uchar* data = frameEdged.ptr<uchar>(j);
             {
                 if(data[colIndex_lower] == 255)
                 {
                     rowIndex4Calib_lower.push_back(j);
-                    colIndex_lower = colIndex_lower + 100;
+//                    colIndex_lower = colIndex_lower + 100;
+                    qDebug() << "The lower Row index is:" << j;
+                    colIndex_lower = colIndex_lower + 60;
                     break;
                 }
             }
@@ -570,7 +655,7 @@ double MainWindow::calculateCalibValue(Mat frameEdged)
 }
 
 
-void MainWindow::on_pushButton_clicked()
-{
-    emit signal_waveCheck();
-}
+//void MainWindow::on_pushButton_clicked()
+//{
+//    emit signal_waveCheck();
+//}

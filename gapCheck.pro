@@ -66,3 +66,5 @@ LIBS+=D:\opencv\build\x64\vc12\lib\opencv_photo2413.lib
 LIBS+=D:\opencv\build\x64\vc12\lib\opencv_stitching2413.lib
 LIBS+=D:\opencv\build\x64\vc12\lib\opencv_superres2413.lib
 LIBS+=D:\opencv\build\x64\vc12\lib\opencv_videostab2413.lib
+
+
